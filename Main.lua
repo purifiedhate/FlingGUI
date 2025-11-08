@@ -1659,7 +1659,28 @@ print("UI Library made by @Nulare")
 print("=======================================")
 wait(1)
 
-local ui = UILib.new('FlingGUI', Vector2.new(550, 280), {})
+local function fetchUpdateLogs()
+    local githubUrl = "https://raw.githubusercontent.com/purifiedhate/FlingGUI/refs/heads/main/Changes"
+    
+    local success, result = pcall(function()
+        return game:HttpGet(githubUrl)
+    end)
+    
+    if success and result then
+        return result
+    else
+        return "Failed to fetch update logs. wrong url dumbass."
+    end
+end
+
+spawn(function()
+    local updateLogs = fetchUpdateLogs()
+    print("\n=== UPDATE LOGS ===")
+    print(updateLogs)
+    print("===================\n")
+end)
+
+local ui = UILib.new('FlingGUI', Vector2.new(550, 320), {})
 
 local generalTab = ui:Tab('General')
 local mainSection = ui:Section(generalTab, 'Main')
@@ -1692,6 +1713,7 @@ local flingStrength = 10000
 local flingDuration = 0.05
 local flingInterval = 0.5
 local noCollision = false
+local keybindMode = "Toggle"
 
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
@@ -1736,6 +1758,24 @@ local function getCharacter()
         hrp = nil
     end
     return hrp
+end
+
+local function doSingleFling()
+    local currentHrp = getCharacter()
+    if not currentHrp then return end
+
+    local pos = currentHrp.Position
+    local x = math.random(-flingStrength, flingStrength)
+    local y = math.max(math.random(-flingStrength, flingStrength), 0)
+    local z = math.random(-flingStrength, flingStrength)
+    currentHrp.AssemblyLinearVelocity = Vector3.new(x, y, z)
+
+    task.wait(flingDuration)
+
+    if currentHrp then
+        currentHrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        currentHrp.Position = pos
+    end
 end
 
 local function startFling()
@@ -1790,15 +1830,19 @@ end)
 ui:Keybind(generalTab, mainSection, 'Fling key', 'f', function(state)
 end, 'Toggle')
 
+ui:Choice(generalTab, mainSection, 'Keybind mode', {keybindMode}, function(values)
+    keybindMode = values[1]
+end, {'Hold', 'Toggle', 'Click'}, false)
+
 ui:Slider(generalTab, mainSection, 'Strength', flingStrength, function(val)
     flingStrength = val
 end, 250, 20000, 100, '')
 
-ui:Slider(generalTab, mainSection, 'Duration', flingDuration, function(val)
+ui:Slider(generalTab, mainSection, 'Duration (s)', flingDuration, function(val)
     flingDuration = val
 end, 0.01, 0.2, 0.01, 's')
 
-ui:Slider(generalTab, mainSection, 'Cooldown', flingInterval, function(val)
+ui:Slider(generalTab, mainSection, 'Cooldown (s)', flingInterval, function(val)
     flingInterval = val
 end, 0.1, 2.0, 0.1, 's')
 
@@ -1845,16 +1889,32 @@ spawn(function()
             if flingEnabled and flingKeybindItem and flingKeybindItem.value and ui._inputs then
                 local flingKey = flingKeybindItem.value
                 if flingKey ~= 'unbound' and ui._inputs[flingKey] then
-                    local currentKeyState = ui._inputs[flingKey].click
-                    if currentKeyState and not lastKeyState then
-                        flingToggled = not flingToggled
-                        if flingToggled then
+                    local currentKeyState = ui._inputs[flingKey]
+                    
+                    if keybindMode == "Hold" then
+                        if currentKeyState.held and not flingToggled then
+                            flingToggled = true
                             startFling()
-                        else
+                        elseif not currentKeyState.held and flingToggled then
+                            flingToggled = false
                             stopFling()
                         end
+                    elseif keybindMode == "Toggle" then
+                        if currentKeyState.click and not lastKeyState then
+                            flingToggled = not flingToggled
+                            if flingToggled then
+                                startFling()
+                            else
+                                stopFling()
+                            end
+                        end
+                        lastKeyState = currentKeyState.click
+                    elseif keybindMode == "Click" then
+                        if currentKeyState.click and not lastKeyState then
+                            doSingleFling()
+                        end
+                        lastKeyState = currentKeyState.click
                     end
-                    lastKeyState = currentKeyState
                 end
             end
 
