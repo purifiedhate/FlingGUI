@@ -1680,7 +1680,7 @@ spawn(function()
     print("===================\n")
 end)
 
-local ui = UILib.new('FlingGUI', Vector2.new(550, 320), {})
+local ui = UILib.new('FlingGUI', Vector2.new(550, 280), {})
 
 local generalTab = ui:Tab('General')
 local mainSection = ui:Section(generalTab, 'Main')
@@ -1838,13 +1838,13 @@ ui:Slider(generalTab, mainSection, 'Strength', flingStrength, function(val)
     flingStrength = val
 end, 250, 20000, 100, '')
 
-ui:Slider(generalTab, mainSection, 'Duration (s)', flingDuration, function(val)
+ui:Slider(generalTab, mainSection, 'Duration', flingDuration, function(val)
     flingDuration = val
 end, 0.01, 0.2, 0.01, 's')
 
-ui:Slider(generalTab, mainSection, 'Cooldown (s)', flingInterval, function(val)
+ui:Slider(generalTab, mainSection, 'Cooldown', flingInterval, function(val)
     flingInterval = val
-end, 0.1, 2.0, 0.1, 's')
+end, 0.01, 2.0, 0.1, 's')
 
 ui:Checkbox(generalTab, extraSection, 'No collision', false, function(state)
     noCollision = state
