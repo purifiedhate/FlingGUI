@@ -1680,7 +1680,7 @@ spawn(function()
     print("===================\n")
 end)
 
-local ui = UILib.new('FlingGUI', Vector2.new(550, 280), {})
+local ui = UILib.new('FlingGUI', Vector2.new(550, 320), {})
 
 local generalTab = ui:Tab('General')
 local mainSection = ui:Section(generalTab, 'Main')
