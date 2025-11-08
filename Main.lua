@@ -1690,9 +1690,7 @@ end)
 local flingEnabled = false
 local flingStrength = 10000
 local flingDuration = 0.05
-local flingKey = 'f'
 local flingInterval = 0.5
-
 local noCollision = false
 
 local Players = game:GetService("Players")
@@ -1701,6 +1699,7 @@ local char, hrp
 local flingRunning = false
 local flingToggled = false
 local lastKeyState = false
+local flingKeybindItem = nil
 
 local function isBasePart(obj)
     local t = obj.ClassName
@@ -1752,7 +1751,6 @@ local function startFling()
             end
 
             local pos = currentHrp.Position
-
             local x = math.random(-flingStrength, flingStrength)
             local y = math.max(math.random(-flingStrength, flingStrength), 0)
             local z = math.random(-flingStrength, flingStrength)
@@ -1789,18 +1787,18 @@ ui:Checkbox(generalTab, mainSection, 'Enable Fling', false, function(state)
     end
 end)
 
-ui:Keybind(generalTab, mainSection, 'Fling key', flingKey, function(state)
+ui:Keybind(generalTab, mainSection, 'Fling key', 'f', function(state)
 end, 'Toggle')
 
 ui:Slider(generalTab, mainSection, 'Strength', flingStrength, function(val)
     flingStrength = val
 end, 250, 20000, 100, '')
 
-ui:Slider(generalTab, mainSection, 'Duration (s)', flingDuration, function(val)
+ui:Slider(generalTab, mainSection, 'Duration', flingDuration, function(val)
     flingDuration = val
 end, 0.01, 0.2, 0.01, 's')
 
-ui:Slider(generalTab, mainSection, 'Cooldown (s)', flingInterval, function(val)
+ui:Slider(generalTab, mainSection, 'Cooldown', flingInterval, function(val)
     flingInterval = val
 end, 0.1, 2.0, 0.1, 's')
 
@@ -1827,17 +1825,37 @@ spawn(function()
         if ui and ui.Step then
             ui:Step()
 
-            if flingEnabled and ui._inputs and ui._inputs[flingKey] then
-                local currentKeyState = ui._inputs[flingKey].click
-                if currentKeyState and not lastKeyState then
-                    flingToggled = not flingToggled
-                    if flingToggled then
-                        startFling()
-                    else
-                        stopFling()
+            if not flingKeybindItem then
+                for _, tab in pairs(ui._tree._tabs) do
+                    if tab.name == 'General' then
+                        for _, section in pairs(tab._sections) do
+                            if section.name == 'Main' then
+                                for _, item in pairs(section._items) do
+                                    if item.type == 'key' then
+                                        flingKeybindItem = item
+                                        break
+                                    end
+                                end
+                            end
+                        end
                     end
                 end
-                lastKeyState = currentKeyState
+            end
+
+            if flingEnabled and flingKeybindItem and flingKeybindItem.value and ui._inputs then
+                local flingKey = flingKeybindItem.value
+                if flingKey ~= 'unbound' and ui._inputs[flingKey] then
+                    local currentKeyState = ui._inputs[flingKey].click
+                    if currentKeyState and not lastKeyState then
+                        flingToggled = not flingToggled
+                        if flingToggled then
+                            startFling()
+                        else
+                            stopFling()
+                        end
+                    end
+                    lastKeyState = currentKeyState
+                end
             end
 
             if noCollision and not noCollisionLoop then
