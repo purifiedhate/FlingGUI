@@ -1844,7 +1844,7 @@ end, 0.01, 0.2, 0.01, 's')
 
 ui:Slider(generalTab, mainSection, 'Cooldown', flingInterval, function(val)
     flingInterval = val
-end, 0.01, 2.0, 0.1, 's')
+end, 0.01, 0.9, 0.01, 's')
 
 ui:Checkbox(generalTab, extraSection, 'No collision', false, function(state)
     noCollision = state
